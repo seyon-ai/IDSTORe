@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dark E-Commerce</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      animation: fadeIn 1s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    input, textarea, button {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      background-color: #1e1e1e;
+      color: #ffffff;
+      border: none;
+      border-radius: 5px;
+      transition: 0.3s ease;
+    }
+    input:focus, textarea:focus, button:hover {
+      background-color: #333;
+    }
+    .product {
+      border: 1px solid #444;
+      border-radius: 10px;
+      padding: 15px;
+      margin: 15px 0;
+      background-color: #1e1e1e;
+      transition: transform 0.3s;
+    }
+    .product:hover {
+      transform: scale(1.02);
+    }
+    .images img {
+      width: 100px;
+      margin: 5px;
+      border-radius: 5px;
+    }
+    .buttons button {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Dark E-Commerce Shop</h1>
+
+<!-- Search Bar -->
+<input type="text" id="searchBar" placeholder="Search products...">
+
+<!-- Product List -->
+<div id="productList"></div>
+
+<!-- Product Add Form (only for admin) -->
+<form id="addProductForm">
+  <h2>Add New Product</h2>
+  <input type="text" id="productName" placeholder="Product Name" required>
+  <input type="text" id="image1" placeholder="Image URL 1" required>
+  <input type="text" id="image2" placeholder="Image URL 2" required>
+  <input type="text" id="image3" placeholder="Image URL 3" required>
+  <input type="text" id="image4" placeholder="Image URL 4" required>
+  <textarea id="description" placeholder="Description" required></textarea>
+  <button type="button">Add Product</button>
+</form>
+
+<!-- Firebase + Product Script -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBMGk9_xw5-m58oorEwQmHHNIRFiYbQx-s",
+    authDomain: "idseller-89d35.firebaseapp.com",
+    databaseURL: "https://idseller-89d35-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "idseller-89d35",
+    storageBucket: "idseller-89d35.firebasestorage.app",
+    messagingSenderId: "654884554129",
+    appId: "1:654884554129:web:486dd49e4015018e7b4630"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  const productList = document.getElementById('productList');
+  const searchBar = document.getElementById('searchBar');
+
+  const isAdmin = new URLSearchParams(window.location.search).get('admin') === '826';
+  if (!isAdmin) {
+    document.getElementById('addProductForm').style.display = 'none';
+  }
+
+  document.querySelector('#addProductForm button').addEventListener('click', () => {
+    const name = document.getElementById('productName').value;
+    const images = [
+      document.getElementById('image1').value,
+      document.getElementById('image2').value,
+      document.getElementById('image3').value,
+      document.getElementById('image4').value
+    ];
+    const description = document.getElementById('description').value;
+
+    if (name && description && images.every(url => url.trim() !== '')) {
+      push(ref(db, 'products'), { name, images, description });
+      document.getElementById('addProductForm').reset();
+      alert('Product added!');
+    }
+  });
+
+  onValue(ref(db, 'products'), (snapshot) => {
+    const data = snapshot.val();
+    renderProducts(data);
+  });
+
+  function renderProducts(data) {
+    const search = searchBar.value.toLowerCase();
+    productList.innerHTML = '';
+    for (const id in data) {
+      const product = data[id];
+      if (!product.name.toLowerCase().includes(search)) continue;
+      const div = document.createElement('div');
+      div.className = 'product';
+      div.innerHTML = `
+        <h2>${product.name}</h2>
+        <div class="images">
+          ${product.images.map(src => `<img src="${src}" alt="img">`).join('')}
+        </div>
+        <div class="description">${product.description}</div>
+        <div class="buttons">
+          <button onclick="alert('${product.name} added to cart.')">Add to Cart</button>
+          <button onclick="window.open('https://wa.me/918327641735?text=Product: ${encodeURIComponent(product.name)}%0ADescription: ${encodeURIComponent(product.description)}')">Buy Now</button>
+        </div>
+      `;
+      productList.appendChild(div);
+    }
+  }
+
+  searchBar.addEventListener('input', () => {
+    onValue(ref(db, 'products'), (snapshot) => renderProducts(snapshot.val()));
+  });
+</script>
+</body>
+</html>
