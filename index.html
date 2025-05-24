@@ -71,7 +71,7 @@
   <input type="text" id="image3" placeholder="Image URL 3" required>
   <input type="text" id="image4" placeholder="Image URL 4" required>
   <textarea id="description" placeholder="Description" required></textarea>
-  <button type="button">Add Product</button>
+  <button type="submit">Add Product</button>
 </form>
 
 <!-- Firebase + Product Script -->
@@ -100,7 +100,8 @@
     document.getElementById('addProductForm').style.display = 'none';
   }
 
-  document.querySelector('#addProductForm button').addEventListener('click', () => {
+  document.getElementById('addProductForm').addEventListener('submit', (e) => {
+    e.preventDefault();
     const name = document.getElementById('productName').value;
     const images = [
       document.getElementById('image1').value,
